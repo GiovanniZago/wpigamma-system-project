@@ -6,6 +6,7 @@ HEADER_SIZE = 8
 LOW_SIZE    = 8
 HIGH_SIZE   = 4
 
+
 def unpack_egamma(byte_line, reals=False):
     """unpack_egamma
 
@@ -64,23 +65,21 @@ def unpack_egamma(byte_line, reals=False):
     if reals:
         return {
             "pt": pt * 0.03125,
-            "phi": phi * np.pi / (2 ** 12),
             "eta": eta * np.pi / (2 ** 12), 
+            "phi": phi * np.pi / (2 ** 12),
             "quality": quality
         }
     
     else:
         return {
             "pt": pt,
-            "phi": phi,
             "eta": eta, 
+            "phi": phi,
             "quality": quality
         }
 
-def get_egamma_event(header_byte, file, file_out=None, features=None, pad_to=None, reals=False, debug=False):
-    """get_egamma_event
-
-    Allows for inspecting the data of a binary file
+def get_egamma_cands(header_byte, file, features=None, reals=False, debug=False):
+    """get_egamma_cands
 
     Parameters
     ----------
@@ -123,23 +122,39 @@ def get_egamma_event(header_byte, file, file_out=None, features=None, pad_to=Non
     byte word of the data format. A candidate is split between
     two words (64-bit + 32-bit) so, since each candidate must 
     be complete, the minimum unit that one has to parse is 
-    three blocks of 64-bit words. 
+    two blocks of 64-bit words. Instead, a block of three 64-bit
+    words corresponds to 2 candidates. So we first look at the 
+    number of blocks of three words, corresponding to 2 candidates
+    each, and then we check if there are two spare words,
+    corresponding to an extra particle. If there is only one spare
+    word it means that the data is corrupted as a single 64-bit
+    word is not enough to reconstruct a candidate (i.e. 96 bit).
     """
     n_words          = foo & 0xFFF
     n_cands          = (n_words * 2) // 3
     next_header_byte = header_byte + (n_words + 1) * 8
 
-    print(f"Header byte: {header_byte}, n_words: {n_words}, n_cands: {n_cands}, next_header_byte: {next_header_byte}")
+    print(f"Egamma header byte: {header_byte}, n_words: {n_words}, n_cands: {n_cands}, next_header_byte: {next_header_byte}")
 
-    # calculate 12-byte blocks that hav
     inverse          = False
     n_blocks         = n_words // 3
     spare_words      = n_words % 3
 
-    if (spare_words == 1) or (n_words == 0):
-        return 1, next_header_byte
-
     data = []
+
+    """
+    n_words should be at least 18 in order to have 12 "potential" candidtes. 
+    The reason for this is how the CT is supposed to work. Of course, 
+    not all 12 potential candidates must be there: some words may contain 
+    only zeros. 
+    """
+    if n_words == 0:
+        print("Corrupted event: n_words = 0")
+        return 1, next_header_byte, data
+
+    if spare_words == 1:
+        print("Corrupted event: spare_words = 1")
+        return 1, next_header_byte, data
 
     for _ in range(n_blocks):
         for _ in range(2):
@@ -177,26 +192,8 @@ def get_egamma_event(header_byte, file, file_out=None, features=None, pad_to=Non
     if debug:
         for particle in data:
             print(particle)
-
-    if file_out:
-        fout = open(config.AIE_DATA + f"/{file_out}.txt", "w")
-
-        for particle in data:
-            fout.write(" ".join([str(particle[key]) for key in particle]) + "\n")
-
-        if pad_to and (n_cands < pad_to):
-            for _ in range(pad_to - n_cands):
-                fout.write(" ". join(["0" for _ in features]) + "\n")
-
-        fout.close()
     
-    return 0, next_header_byte
+    return 0, next_header_byte, data
 
 if __name__ == "__main__":
-    fbin = open(config.DATA + "/egamma_WPiGamma_PU200.dump", "rb")
-
-    header_byte = 0
-    get_egamma_event(header_byte, fbin, "in1", ["phi", "quality"], pad_to=32)
-
-
-    fbin.close()
+    pass
