@@ -42,6 +42,9 @@ def generate_aiesim_file(puppis: List[dict],
 
         n_puppi = pad_puppi
 
+    elif n_puppi > pad_puppi:
+        raise ValueError("n_puppi is bigger than pad_puppi")
+
     """ 
     Process egamma candidates, if any
     """
@@ -56,6 +59,9 @@ def generate_aiesim_file(puppis: List[dict],
                 )
 
             n_egamma = pad_egamma
+
+        elif n_egamma > pad_egamma:
+            raise ValueError("n_egamma is bigger than pad_egamma")
     
     """ 
     Flatten puppis and egammas
@@ -95,7 +101,7 @@ if __name__ == "__main__":
     # read puppis
     fbin = open(config.DATA + "/puppi_WPiGamma_PU200.dump", "rb")
 
-    header_byte = 0
+    header_byte = 496
     _, _, puppis = puppi.get_puppi_cands(header_byte, fbin, ["eta", "pid"], debug=True)
 
     fbin.close()
@@ -103,7 +109,7 @@ if __name__ == "__main__":
     # read egammas
     fbin = open(config.DATA + "/egamma_WPiGamma_PU200.dump", "rb")
 
-    header_byte = 0
+    header_byte = 344
     _, _, egammas = egamma.get_egamma_cands(header_byte, fbin, ["eta"], debug=True)
 
     fbin.close()

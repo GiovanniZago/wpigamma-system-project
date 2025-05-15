@@ -93,4 +93,5 @@ def get_puppi_cands(header_byte, file, features=None, reals=False, debug=False):
     return 0, next_header_byte, data
     
 if __name__ == "__main__":
-    pass
+    file = open(config.DATA + "/puppi_WPiGamma_PU200.dump", "rb")
+    get_puppi_cands(496, file, reals=False, debug=True)

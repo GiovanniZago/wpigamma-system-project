@@ -196,4 +196,5 @@ def get_egamma_cands(header_byte, file, features=None, reals=False, debug=False)
     return 0, next_header_byte, data
 
 if __name__ == "__main__":
-    pass
+    file = open(config.DATA + "/egamma_WPiGamma_PU200.dump", "rb")
+    get_egamma_cands(344, file, reals=False, debug=True)

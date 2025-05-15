@@ -27,18 +27,6 @@ def aie_compile_x86(env):
                     "-workdir", 
                     config.WORK_X86], 
                     env=env)
-    
-def aie_compile_baseline_x86(env):
-    os.chdir(config.AIE_X86_BASELINE)
-
-    subprocess.run(["aiecompiler", 
-                    "--target=x86sim", 
-                    "-I", 
-                    config.AIE_SRC_BASELINE,
-                    config.AIE_SRC_BASELINE + "/graph.cpp", 
-                    "-workdir", 
-                    config.WORK_X86_BASELINE], 
-                    env=env)
 
 def aie_compile_hw(env):
     os.chdir(config.AIE_HW)
@@ -56,24 +44,6 @@ def aie_compile_hw(env):
                     "--stacksize=16384"], 
                     env=env)
     
-def aie_compile_baseline_hw(env):
-    os.chdir(config.AIE_HW_BASELINE)
-
-    subprocess.run(["aiecompiler", # no debug flag needed here
-                    "-target",
-                    "hw", 
-                    "--platform",
-                    f"{config.XILINX_VCK5000_GEN4X8_XDMA}", 
-                    "-I", 
-                    f"{config.AIE_SRC_BASELINE}", 
-                    f"{config.AIE_SRC_BASELINE}/graph.cpp",
-                    "-workdir", 
-                    f"{config.WORK_HW_BASELINE}", 
-                    "--stacksize=4800", 
-                    "--pl-freq=360", 
-                    "--Xchess=main:darts.xargs=-nb"], 
-                    env=env)
-    
 def run_x86_simulator(env):
     os.chdir(config.AIE_X86)
 
@@ -84,16 +54,6 @@ def run_x86_simulator(env):
                     f"--output-dir={config.OUT_SIM_X86}"], 
                     env=env)
     
-def run_baseline_x86_simulator(env):
-    os.chdir(config.AIE_X86_BASELINE)
-
-    subprocess.run(["x86simulator", 
-                    "--dump",
-                    f"--pkg-dir={config.WORK_X86_BASELINE}", 
-                    f"--input-dir={config.AIE_DATA_BASELINE}",
-                    f"--output-dir={config.OUT_SIM_X86_BASELINE}"], 
-                    env=env)
-    
 def run_aiesimulator(env):
     os.chdir(config.AIE_HW)
 
@@ -102,16 +62,6 @@ def run_aiesimulator(env):
                     f"--pkg-dir={config.WORK_HW}",
                     f"--input-dir={config.AIE_DATA}", 
                     f"--output-dir={config.OUT_SIM_AIE}"], 
-                    env=env)
-    
-def run_baseline_aiesimulator(env):
-    os.chdir(config.AIE_HW_BASELINE)
-
-    subprocess.run(["aiesimulator", 
-                    "--dump-vcd=foo", 
-                    f"--pkg-dir={config.WORK_HW_BASELINE}",
-                    f"--input-dir={config.AIE_DATA_BASELINE}", 
-                    f"--output-dir={config.OUT_SIM_AIE_BASELINE}"], 
                     env=env)
     
 def hls_compile(env, kernel_name):
@@ -228,14 +178,11 @@ def run_hw(env):
 if __name__ == "__main__":
     env = get_xilinx_environment()
 
-    # generate data for aie simulation
-    # input_file = "egamma_WPiGamma_PU200.dump"
+    aie_compile_x86(env)
+    run_x86_simulator(env)
 
-    # aie_compile_x86(env)
-    # run_x86_simulator(env)
-
-    aie_compile_hw(env)
-    run_aiesimulator(env)
+    # aie_compile_hw(env)
+    # run_aiesimulator(env)
 
     # hls_compile(env, "mm2s")
     # hls_compile(env, "s2mm")
